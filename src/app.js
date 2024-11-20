@@ -16,6 +16,7 @@ app.use(compression());
 require("./database/init.mongodb.level1.js");
 
 // init router
+app.use("/", require("./routes/index.route.js"));
 
 // handle error
 
