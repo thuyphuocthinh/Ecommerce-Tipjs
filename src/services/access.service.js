@@ -4,9 +4,13 @@ const shopModel = require("../models/shop.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
-const { createTokenPair } = require("../auth/authUtils");
+const { createTokenPair, verifyJWT } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
-const { BadRequestError, AuthFailureError } = require("../core/error.response");
+const {
+  BadRequestError,
+  AuthFailureError,
+  ForbiddenError,
+} = require("../core/error.response");
 const { findByEmail } = require("./shop.service");
 const RoleShop = {
   SHOP: "SHOP",
@@ -16,6 +20,74 @@ const RoleShop = {
 };
 
 class AccessService {
+  static handleRefreshToken = async (refreshToken) => {
+    console.log(">>> refreshToken: ", refreshToken);
+
+    // xem refreshToken gui len da het han hay chua
+    const foundToken = await KeyTokenService.findByRefreshTokenUsed(
+      refreshToken
+    );
+
+    if (foundToken) {
+      // decode ra xem may la thang nao?
+      const { userId, email } = await verifyJWT(
+        refreshToken,
+        foundToken.privateKey
+      );
+
+      if (userId && email) {
+        await KeyTokenService.deleteKeyByUserId(userId);
+        throw new ForbiddenError("Something wrong happened!! Please relogin");
+      }
+    }
+
+    // neu refreshToken chua het han, kiem tra xem refreshToken co phai do he thong tao hay khong
+    const holderToken = await KeyTokenService.findByRefreshToken(refreshToken);
+    if (!holderToken) {
+      throw new AuthFailureError("Shop not registerred");
+    }
+
+    // verify token
+    const { userId, email } = await verifyJWT(
+      refreshToken,
+      holderToken.privateKey
+    );
+
+    // check userId, email
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) {
+      throw new AuthFailureError("Shop not registerred");
+    }
+
+    // neu thoa man hop le
+    // 1. create cap token moi
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      await createTokenPair(
+        {
+          userId,
+          email,
+        },
+        holderToken.privateKey,
+        holderToken.publicKey
+      );
+    // 2. dua refreshToken vua gui vao danh sach het han
+    await holderToken.updateOne({
+      $set: {
+        refreshToken: newRefreshToken,
+      },
+      $addToSet: {
+        refreshTokenUsed: refreshToken,
+      },
+    });
+    return {
+      user: { userId, email },
+      tokens: {
+        refreshToken: newRefreshToken,
+        accessToken: newAccessToken,
+      },
+    };
+  };
+
   static signUp = async ({ name, email, password }) => {
     try {
       // step 1: check su ton tai cua email
