@@ -6,6 +6,8 @@ const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
 const { createTokenPair } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
+const { BadRequestError, AuthFailureError } = require("../core/error.response");
+const { findByEmail } = require("./shop.service");
 const RoleShop = {
   SHOP: "SHOP",
   WRITER: "WRITER",
@@ -19,10 +21,7 @@ class AccessService {
       // step 1: check su ton tai cua email
       const holderShop = await shopModel.findOne({ email }).lean();
       if (holderShop) {
-        return {
-          code: "xxxx",
-          message: "Shop already registered",
-        };
+        throw new BadRequestError("Error: Shop already registered");
       }
 
       const hassPassword = await bcrypt.hash(password, 10);
@@ -52,19 +51,6 @@ class AccessService {
         const privateKey = crypto.randomBytes(64).toString("hex");
         const publicKey = crypto.randomBytes(64).toString("hex");
 
-        const keyStore = await KeyTokenService.createKeyToken({
-          userId: newShop._id,
-          publicKey,
-          privateKey,
-        });
-
-        if (!keyStore) {
-          return {
-            code: "xxxx",
-            message: "publicKeyString error",
-          };
-        }
-
         const tokens = await createTokenPair(
           {
             userId: newShop._id,
@@ -74,17 +60,23 @@ class AccessService {
           publicKey
         );
 
-        console.log("Created tokens: ", tokens);
+        const keyStore = await KeyTokenService.createKeyToken({
+          userId: newShop._id,
+          publicKey,
+          privateKey,
+          refreshToken: tokens.refreshToken,
+        });
+
+        if (!keyStore) {
+          throw new BadRequestError("Error: Public key string error");
+        }
 
         return {
-          code: 201,
-          metadata: {
-            shop: getInfoData({
-              fields: ["_id", "name", "email"],
-              object: newShop,
-            }),
-            tokens,
-          },
+          shop: getInfoData({
+            fields: ["_id", "name", "email"],
+            object: newShop,
+          }),
+          tokens,
         };
       }
 
@@ -93,11 +85,50 @@ class AccessService {
         metadata: null,
       };
     } catch (error) {
+      throw new Error(error.message);
+    }
+  };
+
+  static login = async ({ email, password, refreshToken = null }) => {
+    try {
+      console.log(">>> email: ", email);
+      const foundShop = await findByEmail(email);
+      if (!foundShop) {
+        throw new BadRequestError("Shop not registered");
+      }
+      const match = bcrypt.compare(password, foundShop.password);
+      if (!match) {
+        throw new AuthFailureError("Invalid credentials");
+      }
+
+      const privateKey = crypto.randomBytes(64).toString("hex");
+      const publicKey = crypto.randomBytes(64).toString("hex");
+
+      const tokens = await createTokenPair(
+        {
+          userId: foundShop._id,
+          email,
+        },
+        privateKey,
+        publicKey
+      );
+
+      await KeyTokenService.createKeyToken({
+        refreshToken: tokens.refreshToken,
+        privateKey,
+        publicKey,
+        userId: foundShop._id,
+      });
+
       return {
-        code: "xxx",
-        message: error.message,
-        status: "error",
+        shop: getInfoData({
+          fields: ["_id", "name", "email"],
+          object: foundShop,
+        }),
+        tokens,
       };
+    } catch (error) {
+      throw new Error(error.message);
     }
   };
 }
