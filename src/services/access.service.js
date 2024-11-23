@@ -163,8 +163,7 @@ class AccessService {
 
   static login = async ({ email, password, refreshToken = null }) => {
     try {
-      console.log(">>> email: ", email);
-      const foundShop = await findByEmail(email);
+      const foundShop = await findByEmail({ email });
       if (!foundShop) {
         throw new BadRequestError("Shop not registered");
       }

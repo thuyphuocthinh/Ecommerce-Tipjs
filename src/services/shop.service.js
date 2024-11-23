@@ -12,7 +12,8 @@ const findByEmail = async ({
     roles: 1,
   },
 }) => {
-  return await shopModel.findOne({ email }).select(select).lean();
+  console.log(">>> email: ", email);
+  return await shopModel.findOne({ email: email }).select(select).lean();
 };
 
 module.exports = {

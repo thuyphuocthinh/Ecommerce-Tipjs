@@ -34,3 +34,12 @@ class AccessController {
 }
 
 module.exports = new AccessController();
+
+/**
+ * {
+ *    statusCode
+ *    reasonPhrase
+ *    metadata
+ *    message
+ * }
+ */
