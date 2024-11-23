@@ -61,6 +61,7 @@ const authentication = asyncHandler(async (req, res, next) => {
       throw new NotFoundError("Not Found");
     }
     req.keyStore = keyStore;
+    req.userId = userId;
     return next();
   } catch (error) {
     throw new Error(error.message);
