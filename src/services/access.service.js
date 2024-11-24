@@ -21,8 +21,6 @@ const RoleShop = {
 
 class AccessService {
   static handleRefreshToken = async (refreshToken) => {
-    console.log(">>> refreshToken: ", refreshToken);
-
     // xem refreshToken gui len da het han hay chua
     const foundToken = await KeyTokenService.findByRefreshTokenUsed(
       refreshToken
@@ -72,6 +70,53 @@ class AccessService {
       );
     // 2. dua refreshToken vua gui vao danh sach het han
     await holderToken.updateOne({
+      $set: {
+        refreshToken: newRefreshToken,
+      },
+      $addToSet: {
+        refreshTokenUsed: refreshToken,
+      },
+    });
+    return {
+      user: { userId, email },
+      tokens: {
+        refreshToken: newRefreshToken,
+        accessToken: newAccessToken,
+      },
+    };
+  };
+
+  static handleRefreshTokenV2 = async ({ refreshToken, user, keyStore }) => {
+    const { userId, email } = user;
+
+    if (keyStore.refreshTokenUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeyByUserId(userId);
+      throw new ForbiddenError("Something wrong happened!! Please relogin");
+    }
+
+    if (keyStore.refreshToken !== refreshToken) {
+      throw new AuthFailureError("Shop not registered");
+    }
+
+    // check userId, email
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) {
+      throw new AuthFailureError("Shop not registerred");
+    }
+
+    // neu thoa man hop le
+    // 1. create cap token moi
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      await createTokenPair(
+        {
+          userId,
+          email,
+        },
+        keyStore.privateKey,
+        keyStore.publicKey
+      );
+    // 2. dua refreshToken vua gui vao danh sach het han
+    await keyStore.updateOne({
       $set: {
         refreshToken: newRefreshToken,
       },
