@@ -15,8 +15,53 @@ const unSelectData = (unSelect = []) => {
   return Object.fromEntries(unSelect.map((el) => [el, 0]));
 };
 
+const removeBadValue = (object) => {
+  Object.keys(object).forEach((key) => {
+    if (object[key] == null || object[key] == undefined) {
+      delete object[key];
+    }
+  });
+  return object;
+};
+
+/*
+  const a = {
+    c: {
+      d: 1,
+      e: 2
+    }
+  }
+
+  => a = {
+      c.d = 1,
+      c.e = 2;
+    }
+*/
+
+const updateNestedObjectParser = (object) => {
+  const final = {};
+  Object.keys(object).forEach((key) => {
+    if (
+      typeof object[key] === "object" &&
+      !Array.isArray(object[key]) &&
+      object[key] !== null &&
+      object[key] !== undefined
+    ) {
+      const response = updateNestedObjectParser(object[key]);
+      Object.keys(response).forEach((k) => {
+        final[`${key}.${k}`] = response[k];
+      });
+    } else {
+      final[key] = object[key];
+    }
+  });
+  return final;
+};
+
 module.exports = {
   getInfoData,
   getSelectData,
-  unSelectData
+  unSelectData,
+  removeBadValue,
+  updateNestedObjectParser,
 };

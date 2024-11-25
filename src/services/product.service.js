@@ -17,6 +17,7 @@ const {
   findDetailProduct,
   updateProductById,
 } = require("../models/repository/product.repo");
+const { removeBadValue, updateNestedObjectParser } = require("../utils");
 const TYPES = {
   Electronics: "Electronics",
   Clothing: "Clothing",
@@ -146,13 +147,18 @@ class Clothing extends Product {
 
   async updateProduct({ product_id, bodyUpdate }) {
     // 1. Remove undefined, null attributes
+    console.log("run here 1");
+    let payload = updateNestedObjectParser(bodyUpdate);
+    console.log("run here 2");
+    payload = removeBadValue(payload);
+    console.log(">>> payload:::", payload);
     // 2. Check xem update o cho nao
     if (bodyUpdate.product_attributes) {
       // update child
-      await updateProductById({ product_id, bodyUpdate, model: clothing });
+      await updateProductById({ product_id, payload, model: clothing });
     }
     // update parent
-    const updateProduct = await super.updateProduct({ product_id, bodyUpdate });
+    const updateProduct = await super.updateProduct({ product_id, payload });
     return updateProduct;
   }
 }
