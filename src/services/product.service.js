@@ -15,6 +15,7 @@ const {
   searchProductsByUser,
   findAllProducts,
   findDetailProduct,
+  updateProductById,
 } = require("../models/repository/product.repo");
 const TYPES = {
   Electronics: "Electronics",
@@ -31,6 +32,7 @@ class ProductFactory {
 
   static async createProduct(type, payload) {
     const productType = ProductFactory.productRegistry[type];
+    console.log(">>> productType:::", productType);
     if (!productType)
       throw new BadRequestError(`Invalid Product Type::${type}`);
     return new productType(payload).createProduct();
@@ -81,7 +83,17 @@ class ProductFactory {
     return await findDetailProduct({ product_id, unSelect: ["__v"] });
   }
 
-  static updateProduct({}) {}
+  static async updateProduct({ product_type, product_id, bodyUpdate }) {
+    const productType = ProductFactory.productRegistry[product_type];
+    if (!productType) {
+      throw new BadRequestError(`Invalid Product Type::${productType}`);
+    }
+    console.log(">>> productType:::", productType);
+    return new productType(bodyUpdate).updateProduct({
+      product_id,
+      bodyUpdate,
+    });
+  }
 }
 
 // Define base Product class
@@ -109,6 +121,10 @@ class Product {
   async createProduct(product_id) {
     return await product.create({ ...this, _id: product_id });
   }
+
+  async updateProduct({ product_id, bodyUpdate }) {
+    return await updateProductById({ product_id, bodyUpdate, model: product });
+  }
 }
 
 // Define Clothing
@@ -126,6 +142,18 @@ class Clothing extends Product {
       throw new BadRequestError("Create new Product error");
     }
     return newProduct;
+  }
+
+  async updateProduct({ product_id, bodyUpdate }) {
+    // 1. Remove undefined, null attributes
+    // 2. Check xem update o cho nao
+    if (bodyUpdate.product_attributes) {
+      // update child
+      await updateProductById({ product_id, bodyUpdate, model: clothing });
+    }
+    // update parent
+    const updateProduct = await super.updateProduct({ product_id, bodyUpdate });
+    return updateProduct;
   }
 }
 

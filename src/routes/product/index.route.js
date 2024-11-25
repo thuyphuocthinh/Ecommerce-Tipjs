@@ -24,5 +24,6 @@ router.get(
   "/published/all",
   asyncHandler(productController.getAllPulishedProducts)
 );
+router.patch("/update/:id", asyncHandler(productController.updateProductById));
 
 module.exports = router;
