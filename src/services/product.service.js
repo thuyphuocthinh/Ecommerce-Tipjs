@@ -7,6 +7,7 @@ const {
   electronic,
   furniture,
 } = require("../models/product.model");
+const { insertInventory } = require("../models/repository/inventory.repo");
 const {
   findAllDraftProducts,
   publishProductByShop,
@@ -120,7 +121,16 @@ class Product {
   }
 
   async createProduct(product_id) {
-    return await product.create({ ...this, _id: product_id });
+    const newProduct = await product.create({ ...this, _id: product_id });
+    if (newProduct) {
+      await insertInventory({
+        product_id: newProduct._id,
+        shop_id: newProduct.product_shop,
+        stock: newProduct.product_quantity,
+        location: "Danang, Vietnam"
+      });
+      return newProduct;
+    }
   }
 
   async updateProduct({ product_id, bodyUpdate }) {
@@ -147,11 +157,8 @@ class Clothing extends Product {
 
   async updateProduct({ product_id, bodyUpdate }) {
     // 1. Remove undefined, null attributes
-    console.log("run here 1");
     let payload = updateNestedObjectParser(bodyUpdate);
-    console.log("run here 2");
     payload = removeBadValue(payload);
-    console.log(">>> payload:::", payload);
     // 2. Check xem update o cho nao
     if (bodyUpdate.product_attributes) {
       // update child

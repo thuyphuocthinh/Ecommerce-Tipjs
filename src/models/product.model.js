@@ -74,7 +74,7 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Create index
+// Create index for search
 productSchema.index({ product_name: "text", product_description: "text" });
 
 // Document middleware: runs before create(save)
