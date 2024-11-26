@@ -52,6 +52,7 @@ const discountSchema = new mongoose.Schema(
     discount_max_uses_per_user: {
       type: Number,
       required: true,
+      default: 1,
       // Moi user duoc su dung discount nay toi da bao nhieu lan
     },
     discount_users_used: {
