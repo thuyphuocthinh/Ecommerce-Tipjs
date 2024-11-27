@@ -23,8 +23,8 @@ class DiscountController {
     new SuccessResponse({
       message: "Success",
       metadata: await DiscountService.getAllDiscountCodeByShop({
-        limit: req.query.limit,
-        page: req.query.page,
+        limit: req.query.limit || 50,
+        page: req.query.page || 1,
         shop_id: req.user.userId,
       }),
     }).send(res);

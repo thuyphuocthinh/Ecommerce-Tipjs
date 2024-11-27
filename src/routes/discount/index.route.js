@@ -4,7 +4,7 @@ const { asyncHandler } = require("../../auth/checkAuth");
 const { authentication } = require("../../auth/authUtils");
 const discountController = require("../../controllers/discount.controller");
 const router = express.Router();
-router.get(
+router.post(
   "/get-discount-amount",
   asyncHandler(discountController.getDiscountAmount)
 );

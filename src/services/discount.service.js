@@ -198,6 +198,8 @@ class DiscountService {
       throw new NotFoundError("Discount expired");
     }
 
+    console.log(">>> run here 1: ", products);
+
     // Neu tong gia tri that don hang < tong don hang toi thieu
     let total_oder = 0;
     if (discount_min_order_value > 0) {
@@ -210,6 +212,8 @@ class DiscountService {
         );
       }
     }
+
+    console.log(">>> run here 2");
 
     // neu user da su dung ma discount, kiem tra so lan da su dung
     if (discount_max_uses_per_user > 0) {
