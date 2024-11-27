@@ -62,7 +62,7 @@ const searchProductsByUser = async ({ keySearch }) => {
   return results;
 };
 
-const findAllProducts = async ({ limit, sort, page, filter, select }) => {
+const findAllProducts = async ({ limit = 50, sort, page = 1, filter, select }) => {
   const skip = (page - 1) * limit;
   // page 0 - skip 0
   // page 1 - skip 50

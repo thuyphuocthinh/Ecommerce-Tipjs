@@ -44,16 +44,8 @@ class DiscountService {
       max_uses_per_user,
     } = payload;
     // Kiem tra
+    console.log(">>> payload: ", payload);
 
-    const isEmpty = false;
-    Object.keys(payload).forEach((key) => {
-      if (!payload[key]) {
-        isEmpty = true;
-      }
-    });
-    if (isEmpty) {
-      throw new BadRequestError("Missed required fields");
-    }
     if (new Date() < new Date(start_date) || new Date() > new Date(end_date)) {
       throw new BadRequestError("Discount code has expired");
     }
@@ -64,7 +56,7 @@ class DiscountService {
     const foundDiscount = await discountModel
       .findOne({
         discount_code: code,
-        discount_shop_id: new convertToObjectId(shop_id),
+        discount_shop_id: convertToObjectId(shop_id),
       })
       .lean();
     if (foundDiscount && foundDiscount.discount_is_active) {
@@ -85,6 +77,7 @@ class DiscountService {
       discount_max_uses: max_uses,
       discount_used_count: used_count,
       discount_product_ids: applied_for === "ALL" ? [] : product_ids,
+      discount_shop_id: shop_id,
     });
     return newDiscount;
   }
@@ -115,7 +108,7 @@ class DiscountService {
     const foundDiscount = await discountModel
       .findOne({
         discount_code: code,
-        discount_shop_id: new convertToObjectId(shop_id),
+        discount_shop_id: convertToObjectId(shop_id),
       })
       .lean();
 

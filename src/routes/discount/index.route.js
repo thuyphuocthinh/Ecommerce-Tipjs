@@ -9,7 +9,7 @@ router.get(
   asyncHandler(discountController.getDiscountAmount)
 );
 router.get(
-  "/get-products-by-discount",
+  "/get-products-by-discount/:code/:shopId",
   asyncHandler(discountController.getProductsByDiscount)
 );
 

@@ -5,7 +5,10 @@ class DiscountController {
   createDiscount = async (req, res, next) => {
     new SuccessResponse({
       message: "Success",
-      metadata: await DiscountService.createDiscountCode(req.body),
+      metadata: await DiscountService.createDiscountCode({
+        ...req.body,
+        shop_id: req.user.userId,
+      }),
     }).send(res);
   };
 
@@ -20,8 +23,8 @@ class DiscountController {
     new SuccessResponse({
       message: "Success",
       metadata: await DiscountService.getAllDiscountCodeByShop({
-        limit: 50,
-        page: 1,
+        limit: req.query.limit,
+        page: req.query.page,
         shop_id: req.user.userId,
       }),
     }).send(res);
@@ -31,11 +34,11 @@ class DiscountController {
     new SuccessResponse({
       message: "Success",
       metadata: await DiscountService.getProductsByDiscount({
-        limit: 50,
-        page: 1,
-        shop_id: req.body.discount_shop_id,
-        user_id: req.body.user_id,
-        code: req.body.discount_code,
+        limit: req.query.limit,
+        page: req.query.page,
+        shop_id: req.params.shopId,
+        code: req.params.code,
+        user_id: "",
       }),
     }).send(res);
   };
