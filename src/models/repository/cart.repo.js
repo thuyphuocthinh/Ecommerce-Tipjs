@@ -21,7 +21,9 @@ const updateCartItemQuantity = async ({ userId, product }) => {
   const { product_id, quantity } = product;
   const query = {
     cart_user_id: userId,
-    "cart_products.product_id": product_id,
+    cart_products: {
+      $elemMatch: { productId: product_id }, // Match an object in cart_products with the specific product_id
+    },
     cart_state: "ACTIVE",
   };
   const updateSet = {
@@ -36,7 +38,23 @@ const updateCartItemQuantity = async ({ userId, product }) => {
   return await cartModel.findOneAndUpdate(query, updateSet, options);
 };
 
+const removeItemFromCart = async ({ user_id, product_id }) => {
+  const query = {
+    cart_user_id: user_id,
+    "cart_products.product_id": product_id,
+    cart_state: "ACTIVE",
+  };
+  const updateSet = {
+    $pull: {
+      cart_products: { product_id },
+    },
+  };
+  const deleted = await cartModel.updateOne(query, updateSet);
+  return deleted;
+};
+
 module.exports = {
   createUserCart,
   updateCartItemQuantity,
+  removeItemFromCart,
 };

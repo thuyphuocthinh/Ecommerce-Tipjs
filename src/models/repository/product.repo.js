@@ -2,7 +2,11 @@
 
 const { Types } = require("mongoose");
 const { product } = require("../product.model.js");
-const { getSelectData, unSelectData } = require("../../utils/index.js");
+const {
+  getSelectData,
+  unSelectData,
+  convertToObjectId,
+} = require("../../utils/index.js");
 
 const findAllDraftProducts = async ({ query, limit, skip }) => {
   return await queryListProducts({ query, limit, skip });
@@ -62,7 +66,13 @@ const searchProductsByUser = async ({ keySearch }) => {
   return results;
 };
 
-const findAllProducts = async ({ limit = 50, sort, page = 1, filter, select }) => {
+const findAllProducts = async ({
+  limit = 50,
+  sort,
+  page = 1,
+  filter,
+  select,
+}) => {
   const skip = (page - 1) * limit;
   // page 0 - skip 0
   // page 1 - skip 50
@@ -95,6 +105,13 @@ const updateProductById = async ({
   });
 };
 
+const getProductById = async ({ productId }) => {
+  return await product.findOne({
+    _id: convertToObjectId(productId),
+    isPublished: true,
+  }).lean();
+};
+
 module.exports = {
   findAllDraftProducts,
   publishProductByShop,
@@ -103,5 +120,6 @@ module.exports = {
   searchProductsByUser,
   findAllProducts,
   findDetailProduct,
-  updateProductById
+  updateProductById,
+  getProductById
 };

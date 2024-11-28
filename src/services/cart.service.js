@@ -6,11 +6,14 @@
  * 5 - Delete cart item [User]
  */
 
+const { NotFoundError } = require("../core/error.response");
 const cartModel = require("../models/cart.model");
 const {
   createUserCart,
   updateCartItemQuantity,
+  removeItemFromCart,
 } = require("../models/repository/cart.repo");
+const { getProductById } = require("../models/repository/product.repo");
 const { convertToObjectId } = require("../utils");
 
 class CartService {
@@ -34,7 +37,65 @@ class CartService {
     // neu gio hang ton tai va ton tai san pham => cap nhat so luong
     return await updateCartItemQuantity({
       userId,
-      product
+      product,
+    });
+  }
+
+  /*
+    shop_order_ids:[
+      {
+        shop_id,
+        item_products: [
+          {
+            quantity,
+            price,
+            shop_id,
+            old_quantity,
+            product_id
+          }
+        ],
+        version
+      }
+    ]
+  */
+  // update quantity of each product
+  static async updateCart({ userId, shop_order_ids }) {
+    const { product_id, quantity, old_quantity } =
+      shop_order_ids[0]?.item_products[0];
+    // check product exists
+    const foundProduct = await getProductById({ productId: product_id });
+    if (!foundProduct) {
+      throw new NotFoundError("Product does not exist");
+    }
+    if (foundProduct.product_shop.toString() !== shop_order_ids[0]?.shop_id) {
+      throw new NotFoundError("Product does not belong to the shop");
+    }
+    if (quantity === 0) {
+      // remove item from cart
+      return await removeItemFromCart({
+        user_id: userId,
+        product_id,
+      });
+    }
+    return await updateCartItemQuantity({
+      userId,
+      product: {
+        product_id,
+        quantity: quantity - old_quantity,
+      },
+    });
+  }
+
+  static async getListProductsFromCart({ userId }) {
+    return await cartModel.findOne({
+      cart_user_id: convertToObjectId(userId),
+    });
+  }
+
+  static async removeItemFromCart({ user_id, product_id }) {
+    return await removeItemFromCart({
+      user_id,
+      product_id,
     });
   }
 }
