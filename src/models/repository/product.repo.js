@@ -106,10 +106,29 @@ const updateProductById = async ({
 };
 
 const getProductById = async ({ productId }) => {
-  return await product.findOne({
-    _id: convertToObjectId(productId),
-    isPublished: true,
-  }).lean();
+  return await product
+    .findOne({
+      _id: convertToObjectId(productId),
+      isPublished: true,
+    })
+    .lean();
+};
+
+const checkProduct = async (products) => {
+  return await Promise.all(
+    products.map(async (product) => {
+      const foundProduct = await getProductById({
+        productId: product.productId,
+      });
+      if (foundProduct) {
+        return {
+          price: foundProduct.product_price,
+          quantity: product.quantity,
+          productId: product.productId,
+        };
+      }
+    })
+  );
 };
 
 module.exports = {
@@ -121,5 +140,6 @@ module.exports = {
   findAllProducts,
   findDetailProduct,
   updateProductById,
-  getProductById
+  getProductById,
+  checkProduct
 };
