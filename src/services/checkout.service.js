@@ -188,3 +188,31 @@ class CheckoutService {
 }
 
 module.exports = CheckoutService;
+
+
+/*
+  Luồng đi từ lúc user click vào xem chi tiết giỏ hàng
+  1. Xem chi tiết giỏ hàng => lúc này user có thể update quantity, xóa product...
+  2. Chuyển qua trang checkout
+  - Khi user chuyển qua trang checkout, FE + BE không cho phép cập nhật danh sách sản phẩm nữa
+  - User có quyền điền thông tin vận chuyển, chọn hình thức thanh toán, chọn các voucher discount nếu có
+  - BE sẽ kiểm tra thông tin giỏ hàng lại một lần nữa
+  + BE kiểm tra sản phẩm có thật sự tồn tại không, giá đúng không, số lượng còn không
+  + BE tính toán trả ra giá trị đơn hàng, giá trị chưa và đã có discount, tổng discount, phí ship
+  3. Tiến hành đặt hàng
+  - BE sẽ check lại thông tin sản phẩm đơn hàng một lần nữa
+  + Sử dụng khóa lạc quan để chặn không cho user khác đặt khi user này đang đặt hàng
+  + Sử dụng khóa lạc quan kiểm tra xem sản phẩm thật sự còn hàng trong kho không, chỉ cho phép đặt hàng nếu tất cả sản phẩm còn hàng, nếu một trong
+  các sản phẩm hết hàng => yêu cầu user quay lại trang giỏ hàng để cập nhật
+  + Sử dụng khóa lạc quan => kiểm tra cập nhật tức thời của sản phẩm
+  - BE thêm reserve sản phẩm trong kho hàng
+  - BE tính toán lại giá cả lần nữa
+  => Nếu tất cả thành công
+  - BE tạo order
+  - BE xóa sản phẩm trong giỏ hàng
+  4. Order còn có các chức năng
+  - Cập nhật status (do hệ thống cập nhật trạng thái vận chuyển, còn trạng thái đang xử lí ... có thể do shop tự làm hoặc tự động do hệ thống)
+  - Hủy đơn hàng
+  - User có thể xem thông tin chi tiết đơn hàng
+  ....
+*/
