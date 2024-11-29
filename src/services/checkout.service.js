@@ -2,7 +2,7 @@
 
 const { NotFoundError, BadRequestError } = require("../core/error.response");
 const { findCartById } = require("../models/repository/cart.repo");
-const { checkProduct } = require("../models/repository/product.repo");
+const { checkProductServer } = require("../models/repository/product.repo");
 const { getDiscountAmount } = require("./discount.service");
 
 class CheckoutService {
@@ -68,7 +68,7 @@ class CheckoutService {
         item_products = [],
       } = shop_order_ids[i];
       // check tung san pham trong order cua tung shop co ton tai hay khong
-      const checkProduct = await checkProduct(item_products);
+      const checkProduct = await checkProductServer(item_products);
       checkProduct.forEach((product) => {
         if (!product) throw new BadRequestError("Order Wrong");
       });
@@ -86,19 +86,18 @@ class CheckoutService {
       };
       // check su hop le cua shop_discounts
       if (shop_discounts.length > 0) {
-        shop_discounts.forEach(async (discount) => {
-          const { total_price = 0, discount_amount = 0 } =
-            await getDiscountAmount({
-              code: discount.code,
-              userId,
-              shopId,
-              products: checkProduct,
-            });
-          checkout_order.total_discount += discount_amount;
+        for (const discount of shop_discounts) {
+          const { discount_amount } = await getDiscountAmount({
+            code: discount.code,
+            userId,
+            shopId,
+            products: checkProduct,
+          });
           if (discount_amount > 0) {
+            checkout_order.total_discount += discount_amount;
             itemCheckout.priceApplyDiscount = checkoutPrice - discount_amount;
           }
-        });
+        }
       }
 
       // tong thanh toan cuoi cung cua tung shop
@@ -108,7 +107,6 @@ class CheckoutService {
 
     // tong thanh toan cuoi cung (tong tien - tong discount + tong fee ship)
     checkout_order.total_paid += checkout_order.fee_ship;
-
     return {
       shop_order_ids,
       shop_order_ids_new,

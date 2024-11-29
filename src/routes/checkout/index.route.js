@@ -6,8 +6,5 @@ const checkoutController = require("../../controllers/checkout.controller");
 const router = express.Router();
 
 router.use(authentication);
-router.post(
-  "/checkout-review",
-  asyncHandler(checkoutController.checkoutReview)
-);
+router.post("/review", asyncHandler(checkoutController.checkoutReview));
 module.exports = router;

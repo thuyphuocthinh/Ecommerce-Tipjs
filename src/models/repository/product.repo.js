@@ -114,7 +114,7 @@ const getProductById = async ({ productId }) => {
     .lean();
 };
 
-const checkProduct = async (products) => {
+const checkProductServer = async (products) => {
   return await Promise.all(
     products.map(async (product) => {
       const foundProduct = await getProductById({
@@ -141,5 +141,5 @@ module.exports = {
   findDetailProduct,
   updateProductById,
   getProductById,
-  checkProduct
+  checkProductServer
 };
