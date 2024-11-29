@@ -1,5 +1,6 @@
 "use strict";
 
+const { convertToObjectId } = require("../../utils");
 const inventoryModel = require("../inventory.model");
 
 const insertInventory = async ({
@@ -16,6 +17,29 @@ const insertInventory = async ({
   });
 };
 
+const reservationInventory = async ({ productId, quantity, cartId }) => {
+  const query = {
+    inventory_product_id: convertToObjectId(productId),
+    inventory_stock: {
+      $gte: quantity,
+    },
+  };
+  const updateSet = {
+    $inc: {
+      inventory_stock: -quantity,
+    },
+    $push: {
+      inventory_reservations: {
+        cartId,
+        quantity,
+        createdAt: new Date(),
+      },
+    },
+  };
+  return await inventoryModel.updateOne(query, updateSet);
+};
+
 module.exports = {
   insertInventory,
+  reservationInventory,
 };

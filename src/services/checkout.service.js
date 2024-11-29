@@ -1,9 +1,12 @@
 "use strict";
 
 const { NotFoundError, BadRequestError } = require("../core/error.response");
+const orderModel = require("../models/order.model");
 const { findCartById } = require("../models/repository/cart.repo");
 const { checkProductServer } = require("../models/repository/product.repo");
+const { removeAllProductsFromCart } = require("./cart.service");
 const { getDiscountAmount } = require("./discount.service");
+const { acquireLock, releaseLock } = require("./redis.service");
 
 class CheckoutService {
   /*
@@ -115,7 +118,73 @@ class CheckoutService {
   }
 
   // ~ place_order
-  static async checkoutFinal({}) {}
+  static async placeOrderByUser({
+    shop_order_ids,
+    cartId,
+    userId,
+    user_address = {},
+    user_payment = {},
+  }) {
+    // review again
+    const { shop_order_ids_new, checkout_order } = await this.checkoutReview({
+      cartId,
+      userId,
+      shop_order_ids,
+    });
+    // check lai mot lan nua xem san pham co vuot ton kho hay khong
+    // get new array products (dung flatMap)
+    const products = shop_order_ids_new.flatMap((order) => order.item_products);
+    const acquireProducts = [];
+    for (const product of products) {
+      const { productId, quantity } = product;
+      // su dung optimistic, pessimitic => kiem tra ton kho qua ban
+      const keyLock = await acquireLock(productId, quantity, cartId);
+      acquireProducts.push(keyLock ? true : false);
+      if (keyLock) {
+        await releaseLock(keyLock);
+      }
+    }
+
+    // check if co mot san pham het hang trong kho
+    if (acquireProducts.includes(false)) {
+      throw new BadRequestError(
+        "Mot so san pham da duoc cap nhat, vui long quay lai gio hang"
+      );
+    }
+
+    // Neu thanh cong het => tao mot new order
+    const newOrder = new orderModel({
+      order_user_id: userId,
+      order_checkout: checkout_order,
+      order_products: shop_order_ids_new,
+      order_payment: {},
+      order_shipping: {
+        city: "Danang",
+        country: "Vietnam",
+        state: "Danang",
+        street: "14 Doan Uan",
+      },
+    });
+    await newOrder.save();
+
+    // Neu tao order thanh cong => remove product trong cart
+    await removeAllProductsFromCart({ cartId, userId });
+
+    return newOrder;
+  }
+
+  // User lay nhieu order da dat
+  static async getOrdersByUser({}) {}
+
+  // User lay mot order da dat
+  static async getOrderByUser({}) {}
+
+  // User cancel order
+  static async cancelOrderByUser({}) {}
+
+  // Cap nhat order
+  // Luu y: Cap nhat status van chuyen la do he thong + 3rd-party chu khong phai do shop
+  static async updateOrderByShop({}) {}
 }
 
 module.exports = CheckoutService;
