@@ -173,10 +173,10 @@ class CheckoutService {
     return newOrder;
   }
 
-  // User lay nhieu order da dat
+  // User lay many order da dat
   static async getOrdersByUser({}) {}
 
-  // User lay mot order da dat
+  // User lay one order da dat
   static async getOrderByUser({}) {}
 
   // User cancel order
