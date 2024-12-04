@@ -17,6 +17,16 @@ app.use(express.urlencoded({ extended: true }));
 // init db
 require("./database/init.mongodb.level1.js");
 
+// test redis
+app.use("/redis", () => {
+  const productTest = require("./tests/product.test.js");
+  require("./tests/inventory.test.js");
+  setTimeout(() => {
+    productTest.purchaseProduct("product_id_01", 10);
+  }, 1000);
+});
+
+
 // init router
 app.use("/", require("./routes/index.route.js"));
 
