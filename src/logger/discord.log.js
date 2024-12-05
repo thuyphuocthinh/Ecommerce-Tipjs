@@ -15,8 +15,8 @@ client.on("ready", () => {
   console.log(`Logged is as ${client.user.tag}`);
 });
 
-const token =
-  "MTMxNDIxOTgzNjMyMjA5MTA5MA.GwZ1Xf.lph9VNqLcjeJZneitt82YZObGOh5azvz3z_a-o";
+// const token =
+  // "MTMxNDIxOTgzNjMyMjA5MTA5MA.GwZ1Xf.lph9VNqLcjeJZneitt82YZObGOh5azvz3z_a-o";
 client.login(token);
 
 client.on("messageCreate", (msg) => {
