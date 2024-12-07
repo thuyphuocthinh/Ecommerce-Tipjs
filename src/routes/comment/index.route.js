@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.use(authentication);
 router.post("/add-new", asyncHandler(commentController.createComment));
+router.post("/delete", asyncHandler(commentController.deleteComments));
 router.post(
   "/get-list-by-parent-id",
   asyncHandler(commentController.getCommentsByParentId)
