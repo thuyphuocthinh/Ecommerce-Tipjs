@@ -19,6 +19,7 @@ const {
   updateProductById,
 } = require("../models/repository/product.repo");
 const { removeBadValue, updateNestedObjectParser } = require("../utils");
+const NotificationService = require("./notification.service");
 const TYPES = {
   Electronics: "Electronics",
   Clothing: "Clothing",
@@ -127,8 +128,21 @@ class Product {
         product_id: newProduct._id,
         shop_id: newProduct.product_shop,
         stock: newProduct.product_quantity,
-        location: "Danang, Vietnam"
+        location: "Danang, Vietnam",
       });
+      // noti new product is created here
+      // push noti to noti system
+      NotificationService.pushNotiToSystem({
+        type: "SHOP-001",
+        senderId: this.product_attributes,
+        receiverId: 1,
+        options: {
+          product_name: this.product_name,
+          shop_name: this.product_shop,
+        },
+      })
+        .then((res) => console.log(res))
+        .catch((err) => console.log(err));
       return newProduct;
     }
   }

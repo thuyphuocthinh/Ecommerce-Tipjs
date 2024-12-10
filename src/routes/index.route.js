@@ -18,5 +18,6 @@ router.use("/v1/api/cart", require("./cart/index.route.js"));
 router.use("/v1/api/checkout", require("./checkout/index.route.js"));
 router.use("/v1/api/inventory", require("./inventory/index.route.js"));
 router.use("/v1/api/comment", require("./comment/index.route.js"));
+router.use("/v1/api/notification", require("./notification/index.route.js"));
 
 module.exports = router;
