@@ -1,7 +1,14 @@
 "use strict";
 
-const { s3, PutObjectCommand } = require("../config/config.aws-s3");
+const {
+  s3,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("../config/config.aws-s3");
 const { BadRequestError } = require("../core/error.response");
+// const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { getSignedUrl } = require("@aws-sdk/cloudfront-signer");
+const cloudfrontDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
 
 class UploadAwsService {
   static async uploadImageFromLocalS3({ file }) {
@@ -9,25 +16,37 @@ class UploadAwsService {
       if (!file) {
         throw new BadRequestError("No file provided");
       }
-      const command = new PutObjectCommand({
+      const imageName = `${Date.now()}-${file.originalname}`;
+      // put to s3 first
+      const commandForPut = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: `${Date.now()}-${file.originalname}`,
+        Key: imageName,
         Body: file.buffer,
         ContentType: "image/jpeg",
       });
+      const result = await s3.send(commandForPut);
 
-      const result = await s3.send(command);
+      // s3
+      // using getSignedUrl to publish the url to the community
+      // const commandForRead = new GetObjectCommand({
+      //   Bucket: process.env.AWS_BUCKET_NAME,
+      //   Key: imageName,
+      // });
+
+      // cloudfront signer
+      const signedUrl = await getSignedUrl({
+        url: `${cloudfrontDomain}/${imageName}`,
+        dateLessThan: new Date(Date.now() + 1000 * 60),
+        keyPairId: process.env.AWS_CLOUDFRONT_PUBLIC_KEY_ID,
+        privateKey: process.env.AWS_CLOUDFRONT_PRIVATE_KEY,
+      });
+
       return {
-        message: "Image uploaded successfully",
-        filename: result.Key,
-        size: file.size,
-        type: file.mimetype,
-        path: file.path,
-        url: `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${result.Key}`,
+        url: signedUrl,
+        result,
       };
     } catch (error) {
       console.error(error);
-      e;
       throw new BadRequestError(error.message);
     }
   }
