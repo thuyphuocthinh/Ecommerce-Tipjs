@@ -7,6 +7,7 @@ const { pushToLogDiscord } = require("../middlewares/index.js");
 // add log to discord
 router.use(pushToLogDiscord);
 router.use("/v1/api/upload", require("./upload/index.route.js"));
+router.use("/v1/api/profile", require("./profile/index.route.js"));
 
 // check api key
 router.use(checkApiKey);
