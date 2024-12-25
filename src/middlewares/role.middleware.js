@@ -4,9 +4,9 @@ const AccessControl = require("accesscontrol");
 //   {
 //     role: "admin",
 //     resource: "profile",
-//     action: "read:any",
+//     action: "readAny",
 //     attributes: "*, !views",
 //   },
-//   { role: "shop", resource: "profile", action: "read:own", attributes: "*" },
+//   { role: "shop", resource: "profile", action: "readOwn", attributes: "*" },
 // ];
 module.exports = new AccessControl();
