@@ -3,6 +3,8 @@ const express = require("express");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
+const { v4: uuidv4 } = require("uuid");
+const logger = require("./logger/mylogger.log.js");
 require("dotenv").config();
 
 const app = express();
@@ -13,6 +15,18 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// init logger - info of request
+app.use((req, res, next) => {
+  const requestId = req.headers["x-request-id"] || uuidv4();
+  req.requestId = requestId;
+  logger.info(`Input params :: ${req.method}`, [
+    req.path,
+    { requestId: req.requestId },
+    req.method === "POST" ? req.body : req.query,
+  ]);
+  next();
+});
 
 // init db
 require("./database/init.mongodb.level1.js");
@@ -26,7 +40,6 @@ app.use("/redis", () => {
   }, 1000);
 });
 
-
 // init router
 app.use("/", require("./routes/index.route.js"));
 
@@ -39,6 +52,15 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
   const statusCode = error.status || 500;
+  const resMessage = `${statusCode} - ${Date.now()} - Response - ${JSON.stringify(
+    error
+  )}`;
+  // logger of response
+  logger.error(`[${statusCode}] - ${error.message}`, [
+    req.path,
+    { requestId: req.requestId },
+    { message: resMessage },
+  ]);
   return res.status(statusCode).json({
     status: "error",
     code: statusCode,
@@ -47,3 +69,4 @@ app.use((error, req, res, next) => {
 });
 
 module.exports = app;
+// in this file, we have logger for request information and response of error

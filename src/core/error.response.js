@@ -1,4 +1,6 @@
 "use strict";
+const myloggerLog = require("../logger/mylogger.log.js");
+const logger = require("../logger/winston.log.js");
 const reasonPhrases = require("../utils/reasonPhrases.js");
 const statusCodes = require("../utils/statusCodes.js");
 
@@ -6,6 +8,16 @@ class ErrorResponse extends Error {
   constructor(message, status) {
     super(message);
     this.status = status;
+
+    // TODO: log error use winston
+    // logger.error(`[${this.status}] - ${this.message}`);
+    myloggerLog.error(`[${this.status}] - ${this.message}`, {
+      context: "/path",
+      requestId: "ID_REQUEST",
+      message: this.message,
+      status: this.status,
+      metadata: {},
+    });
   }
 }
 
