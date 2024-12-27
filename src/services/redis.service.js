@@ -5,6 +5,14 @@ const { promisify } = require("util");
 const { reservationInventory } = require("../models/repository/inventory.repo");
 const redisClient = redis.createClient();
 
+redisClient.ping((err, res) => {
+  if (err) {
+    console.log("err:::error connecting to redis", err);
+  } else {
+    console.log("res:::connected to redis", res);
+  }
+});
+
 const pexpire = promisify(redisClient.pExpire).bind(redisClient);
 const setnxAsync = promisify(redisClient.setNX).bind(redisClient);
 
