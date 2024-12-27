@@ -66,6 +66,15 @@ class ForbiddenError extends ErrorResponse {
   }
 }
 
+class RedisConnectionError extends ErrorResponse {
+  constructor(
+    message = reasonPhrases.INTERNAL_SERVER_ERROR,
+    statusCode = statusCodes.INTERNAL_SERVER_ERROR
+  ) {
+    super(message, statusCode);
+  }
+}
+
 module.exports = {
   ConflictRequestError,
   BadRequestError,

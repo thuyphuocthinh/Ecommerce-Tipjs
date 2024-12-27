@@ -21,6 +21,16 @@ class OtpService {
 
     return newOtp;
   }
+
+  static async checkOtp({ email = null, token = null }) {
+    const otp = await Otp.findOne({ email, otp_token: token }).lean().exec();
+    if (!otp) {
+      throw new BadRequestError("Invalid token");
+    }
+    // delete because we only use one time - and otp is valid
+    await Otp.deleteOne({ email, otp_token: token });
+    return otp;
+  }
 }
 
 module.exports = OtpService;
