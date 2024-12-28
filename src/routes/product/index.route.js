@@ -11,11 +11,20 @@ router.get(
 );
 router.get("/all", asyncHandler(productController.findAllProducts));
 router.get("/detail/:id", asyncHandler(productController.findDetailProduct));
+router.get("/sku", asyncHandler(productController.getDetailSku));
+router.get(
+  "/sku/listBySpuId",
+  asyncHandler(productController.getListSkuBySpuId)
+);
+
+// => /sku?sku_id=123&spu_id=123 => for example
 
 // authentication
 router.use(authentication);
 // authentication
 
+router.get("/spu", asyncHandler(productController.getDetailSpu));
+router.post("/spu/create", asyncHandler(productController.createNewSpu));
 router.post("/create", asyncHandler(productController.createNewProduct));
 router.post("/publish/:id", asyncHandler(productController.publishProduct));
 router.post("/unpublish/:id", asyncHandler(productController.unpublishProduct));
